@@ -1,48 +1,23 @@
+# <img src="https://raw.githubusercontent.com/oozvc/zcode/main/assets/zcode-logo.png" width="50"> ZCode Language
 
-## 📦 Installer untuk Windows (`install.ps1`)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+![GitHub release](https://img.shields.io/github/v/release/oozvc/zcode)
+![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue)
 
+Bahasa pemrograman modern untuk IoT/Embedded dengan sintaks sederhana dan performa native.
+
+## 🌟 Fitur Utama
+- ✅ Sintaks mirip Python + Arduino
+- ✅ Kompilasi ke native code (AVR/ARM/x86)
+- ✅ Manajemen memori aman
+- ✅ Dukungan multi-board:
+  - Arduino (Uno, Mega, Nano)
+  - ESP32/ESP8266
+  - STM32 (Blue Pill)
+  - Raspberry Pi Pico
+
+## 🚀 Instalasi Cepat
+
+### Windows (PowerShell)
 ```powershell
-<#
-.SYNOPSIS
-    ZCode Windows Installer
-#>
-$ErrorActionPreference = "Stop"
-
-Write-Host "=== ZCode Installer for Windows ===" -ForegroundColor Cyan
-
-# Check admin rights
-if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
-    Write-Host "Harap jalankan sebagai Administrator" -ForegroundColor Red
-    Exit 1
-}
-
-# Download binary
-$versions = Invoke-RestMethod -Uri "https://api.github.com/repos/zcode-lang/zcode/releases/latest"
-$asset = $versions.assets | Where-Object { $_.name -match "zcode-windows-x64\.zip" }
-
-$tempDir = "$env:TEMP\zcode-install"
-New-Item -ItemType Directory -Path $tempDir -Force
-
-Write-Host "Mengunduh ZCode v$($versions.tag_name)..." -ForegroundColor Yellow
-Invoke-WebRequest -Uri $asset.browser_download_url -OutFile "$tempDir\zcode.zip"
-
-# Install
-$installDir = "$env:ProgramFiles\ZCode"
-Expand-Archive -Path "$tempDir\zcode.zip" -DestinationPath $installDir
-
-# Add to PATH
-$path = [Environment]::GetEnvironmentVariable("PATH", "Machine")
-if ($path -notlike "*$installDir*") {
-    [Environment]::SetEnvironmentVariable("PATH", "$path;$installDir", "Machine")
-}
-
-# Install board support
-Write-Host "Menginstal dukungan board..." -ForegroundColor Yellow
-& "$installDir\zcode.exe" board install arduino
-& "$installDir\zcode.exe" board install esp32
-
-# Cleanup
-Remove-Item -Recurse -Force $tempDir
-
-Write-Host "`nInstalasi berhasil!`n" -ForegroundColor Green
-Write-Host "Coba jalankan:`n  zcode new project`n  cd project`n  zcode build`n" -ForegroundColor Yellow
+iwr -useb https://raw.githubusercontent.com/oozvc/zcode/main/install.ps1 | iex
