@@ -1,0 +1,81 @@
+name: Build and Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            artifact: zcode-linux-x64.tar.gz
+            bin_name: zcode
+          - os: windows-latest
+            artifact: zcode-windows-x64.zip
+            bin_name: zcode.exe
+          - os: macos-latest
+            artifact: zcode-macos-x64.tar.gz
+            bin_name: zcode-macos
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Build Tools
+      run: |
+        if [ "${{ runner.os }}" == "Linux" ]; then
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build
+        elif [ "${{ runner.os }}" == "Windows" ]; then
+          choco install cmake ninja -y
+        fi
+
+    - name: Build
+      shell: bash
+      run: |
+        mkdir build
+        cd build
+        cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
+        ninja
+
+    - name: Package
+      shell: bash
+      run: |
+        mkdir -p package/bin package/boards package/examples
+        cp build/bin/zcode* package/bin/
+        cp boards/*.json package/boards/
+        cp examples/*.zcode package/examples/
+        
+        if [ "${{ runner.os }}" == "Windows" ]; then
+          7z a ${{ matrix.artifact }} package/*
+        else
+          tar czf ${{ matrix.artifact }} package
+        fi
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.artifact }}
+        path: ${{ matrix.artifact }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Download Artifacts
+      uses: actions/download-artifact@v3
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          zcode-*.tar.gz
+          zcode-*.zip
+        draft: false
+        prerelease: false
